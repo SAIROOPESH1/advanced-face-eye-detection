@@ -3,16 +3,17 @@ import numpy as np
 import mediapipe as mp
 from pathlib import Path
 import urllib.request
+import os
 
 ROOT = Path(__file__).resolve().parent
 MODEL_PATH = ROOT / "models" / "face_landmarker.task"
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
 
 FACE_CASCADE = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    os.path.join(cv2.data.haarcascades, "haarcascade_frontalface_default.xml")
 )
 EYE_CASCADE = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_eye.xml"
+    os.path.join(cv2.data.haarcascades, "haarcascade_eye.xml")
 )
 
 def ensure_model():
@@ -70,13 +71,14 @@ def analyze_frame(bgr, landmarker=None, mode="IMAGE", timestamp_ms=0,
         face_count = len(faces)
         for (x, y, w, h) in faces:
             cv2.rectangle(output, (x, y), (x+w, y+h), (0, 165, 255), 2)
-            roi = gray[y:y+h, x:x+w]
-            eyes = EYE_CASCADE.detectMultiScale(
-                roi, scaleFactor=1.1, minNeighbors=5, minSize=(12, 12)
-            )
-            eye_count += len(eyes)
-            for (ex, ey, ew, eh) in eyes:
-                cv2.rectangle(output, (x+ex, y+ey), (x+ex+ew, y+ey+eh), (0, 255, 0), 2)
+            roi_gray = gray[y:y+h, x:x+w]
+            if roi_gray is not None and roi_gray.size > 0:
+                eyes = EYE_CASCADE.detectMultiScale(
+                    roi_gray, scaleFactor=1.1, minNeighbors=5, minSize=(12, 12)
+                )
+                eye_count += len(eyes)
+                for (ex, ey, ew, eh) in eyes:
+                    cv2.rectangle(output, (x+ex, y+ey), (x+ex+ew, y+ey+eh), (0, 255, 0), 2)
 
     if use_mesh and landmarker is not None:
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
