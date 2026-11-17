@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import mediapipe as mp
 from pathlib import Path
 import urllib.request
@@ -15,6 +14,12 @@ FACE_CASCADE = cv2.CascadeClassifier(
 EYE_CASCADE = cv2.CascadeClassifier(
     os.path.join(cv2.data.haarcascades, "haarcascade_eye.xml")
 )
+
+if FACE_CASCADE.empty() or EYE_CASCADE.empty():
+    raise RuntimeError(
+        "OpenCV Haar cascade files failed to load. Ensure opencv-python(-headless) "
+        "is installed correctly so cv2.data.haarcascades points to the bundled XML files."
+    )
 
 def ensure_model():
     """Download the official MediaPipe Face Landmarker model once if missing."""
